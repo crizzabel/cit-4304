@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Demo with Registration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #19171761;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }   
+        h1, h2 {
+            text-align: center;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        input, button {
+            margin-bottom: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            background: #e0e0e0;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .link {
+            color: blue;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 10px;
+        }
+        input#loginUsername, input#loginPassword, input#inputString{
+            width: 95%;
+        }
+        div.container{
+            margin-top: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="title">Login</h1>
+        
+        <!-- Login Form -->
+        <form id="loginForm" style="display: none;">
+            <input type="text" id="loginUsername" placeholder="Username" required>
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <br>
+            <button type="button" onclick="login()">Login</button>
+            <p style="text-align: center;">Don't have an account?</p>
+            <p class="link" onclick="showRegisterForm()">Register here</p>
+        </form>
+
+        <!-- Registration Form -->
+        <form id="registerForm" style="display: none;">
+            <input type="text" id="registerUsername" placeholder="Choose a username" required>
+            <input type="password" id="registerPassword" placeholder="Choose a password" required>
+            <br>
+            <button type="button" onclick="register()">Create Account</button>
+            <p style="text-align: center;">Already have an account?</p>
+            <p class="link" onclick="showLoginForm()">Login here</p>
+        </form>
+
+        <!-- Input Form -->
+        <form id="inputForm" style="display: none;">
+            <input type="text" id="inputString" placeholder="Enter a string" required>
+            <button style="margin-left: 290px;" type="button" onclick="submitString()">Print to submit</button>
+            <br>
+            <br>
+            <button type="button" onclick="logout()">Logout</button>
+            <h2>Submitted Strings</h2>
+            <ul id="stringList"></ul>
+        </form>
+    </div>
+
+    <script>
+        // Check session on page load
+        document.addEventListener("DOMContentLoaded", () => {
+            if (sessionStorage.getItem("loggedIn") === "true") {
+                showInputForm();
+            } else {
+                showLoginForm();
+            }
+            loadStrings();
+        });
+
+        function showLoginForm() {
+            document.getElementById("loginForm").style.display = "block";
+            document.getElementById("registerForm").style.display = "none";
+            document.getElementById("inputForm").style.display = "none";
+            document.getElementById("title").innerText = "Login";
+        }
+
+        function showRegisterForm() {
+            document.getElementById("loginForm").style.display = "none";
+            document.getElementById("registerForm").style.display = "block";
+            document.getElementById("inputForm").style.display = "none";
+            document.getElementById("title").innerText = "Register";
+        }
+
+        function showInputForm() {
+            document.getElementById("loginForm").style.display = "none";
+            document.getElementById("registerForm").style.display = "none";
+            document.getElementById("inputForm").style.display = "block";
+            document.getElementById("title").innerText = "Welcome";
+        }
+
+        function register() {
+            const username = document.getElementById("registerUsername").value.trim();
+            const password = document.getElementById("registerPassword").value.trim();
+
+            if (!username || !password) {
+                alert("Please enter valid credentials.");
+                return;
+            }
+
+            const users = JSON.parse(localStorage.getItem("users") || "{}");
+            if (users[username]) {
+                alert("Username already exists. Please choose another one.");
+                return;
+            }
+
+            users[username] = password;
+            localStorage.setItem("users", JSON.stringify(users));
+            alert("Account created successfully! Please login.");
+            showLoginForm();
+        }
+
+        function login() {
+            const username = document.getElementById("loginUsername").value.trim();
+            const password = document.getElementById("loginPassword").value.trim();
+
+            const users = JSON.parse(localStorage.getItem("users") || "{}");
+            if (users[username] && users[username] === password) {
+                sessionStorage.setItem("loggedIn", "true");
+                sessionStorage.setItem("username", username);
+                showInputForm();
+            } else {
+                alert("Invalid username or password.");
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem("loggedIn");
+            sessionStorage.removeItem("username");
+            sessionStorage.removeItem("strings");
+            showLoginForm();
+        }
+
+        function submitString() {
+            const inputString = document.getElementById("inputString").value.trim();
+            if (!inputString) {
+                alert("Please enter a valid string.");
+                return;
+            }
+
+            const username = sessionStorage.getItem("username");
+            let strings = JSON.parse(sessionStorage.getItem("strings") || "{}");
+
+            if (!strings[username]) {
+                strings[username] = [];
+            }
+
+            strings[username].push(inputString);
+            sessionStorage.setItem("strings", JSON.stringify(strings));
+
+            document.getElementById("inputString").value = "";
+            loadStrings();
+        }
+
+        function loadStrings() {
+            const stringList = document.getElementById("stringList");
+            stringList.innerHTML = ""; // Clear existing list
+            const username = sessionStorage.getItem("username");
+            const strings = JSON.parse(sessionStorage.getItem("strings") || "{}");
+
+            if (strings[username]) {
+                strings[username].forEach((str) => {
+                    const li = document.createElement("li");
+                    li.innerText = str;
+                    stringList.appendChild(li);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
